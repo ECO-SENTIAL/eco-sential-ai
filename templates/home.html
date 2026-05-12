@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% block title %}Home – EcoSentinel{% endblock %}
+{% block page_title %}<i class="bi bi-house-fill me-2"></i>Home{% endblock %}
+{% block content %}
+
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="hero-glow"></div>
+    <div class="hero-content">
+        <div class="hero-badge">
+            <span class="pulse-dot"></span>
+            AI Wildlife Surveillance Active
+        </div>
+        <h1 class="hero-title">EcoSentinel</h1>
+        <p class="hero-subtitle">Smart Wildlife Surveillance & Alert Network</p>
+        <p class="hero-desc">An AI-powered system that detects wild animals near human settlements, tracks their GPS location, and instantly alerts forest officers to prevent human-wildlife conflict.</p>
+        <div class="hero-actions">
+            <a href="/detection/" class="btn-eco-primary">
+                <i class="bi bi-camera-fill"></i> Start Detection
+            </a>
+            <a href="/map/" class="btn-eco-secondary">
+                <i class="bi bi-geo-alt-fill"></i> View Map
+            </a>
+        </div>
+    </div>
+    <div class="hero-visual">
+        <div class="radar-ring r1"></div>
+        <div class="radar-ring r2"></div>
+        <div class="radar-ring r3"></div>
+        <div class="radar-center">
+            <i class="bi bi-shield-fill-check"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="stats-row">
+    <div class="stat-card" data-count="{{ total_detections }}">
+        <div class="stat-icon" style="background: rgba(255,80,80,0.15); color: #ff5050;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <div class="stat-value counter" id="cnt-detections">0</div>
+        <div class="stat-label">Total Detections</div>
+    </div>
+    <div class="stat-card" data-count="{{ active_cameras }}">
+        <div class="stat-icon" style="background: rgba(46,204,113,0.15); color: #2ecc71;">
+            <i class="bi bi-camera-video-fill"></i>
+        </div>
+        <div class="stat-value counter" id="cnt-cameras">0</div>
+        <div class="stat-label">Active Cameras</div>
+    </div>
+    <div class="stat-card" data-count="{{ alerts_sent }}">
+        <div class="stat-icon" style="background: rgba(255,165,0,0.15); color: #ffa500;">
+            <i class="bi bi-bell-fill"></i>
+        </div>
+        <div class="stat-value counter" id="cnt-alerts">0</div>
+        <div class="stat-label">Alerts Sent</div>
+    </div>
+    <div class="stat-card" data-count="5">
+        <div class="stat-icon" style="background: rgba(52,152,219,0.15); color: #3498db;">
+            <i class="bi bi-broadcast"></i>
+        </div>
+        <div class="stat-value counter" id="cnt-zones">0</div>
+        <div class="stat-label">Forest Zones</div>
+    </div>
+</div>
+
+<!-- How It Works -->
+<h2 class="section-title mt-5"><i class="bi bi-diagram-3-fill me-2"></i>How EcoSentinel Works</h2>
+<div class="workflow-row">
+    <div class="workflow-step">
+        <div class="step-num">01</div>
+        <div class="step-icon"><i class="bi bi-camera-fill"></i></div>
+        <h5>Camera Feed</h5>
+        <p>Forest border cameras capture images and video footage 24/7 across all zones.</p>
+    </div>
+    <div class="workflow-arrow"><i class="bi bi-arrow-right"></i></div>
+    <div class="workflow-step">
+        <div class="step-num">02</div>
+        <div class="step-icon"><i class="bi bi-cpu-fill"></i></div>
+        <h5>AI Detection</h5>
+        <p>YOLOv8 + OpenCV analyzes frames and detects wildlife with confidence scoring.</p>
+    </div>
+    <div class="workflow-arrow"><i class="bi bi-arrow-right"></i></div>
+    <div class="workflow-step">
+        <div class="step-num">03</div>
+        <div class="step-icon"><i class="bi bi-geo-alt-fill"></i></div>
+        <h5>GPS Tracking</h5>
+        <p>Precise GPS coordinates captured and displayed on an interactive live map.</p>
+    </div>
+    <div class="workflow-arrow"><i class="bi bi-arrow-right"></i></div>
+    <div class="workflow-step">
+        <div class="step-num">04</div>
+        <div class="step-icon"><i class="bi bi-bell-fill"></i></div>
+        <h5>Alert Dispatch</h5>
+        <p>Instant SMS/notification alerts sent to forest officers with location details.</p>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row mt-5">
+    <div class="col-lg-8">
+        <h2 class="section-title"><i class="bi bi-activity me-2"></i>Recent Detections</h2>
+        <div class="activity-feed">
+            {% for det in recent_detections %}
+            <div class="activity-item severity-{{ det.severity }}">
+                <div class="activity-icon animal-{{ det.animal_type }}">
+                    {% if det.animal_type == 'elephant' %}<i class="bi bi-exclamation-octagon-fill"></i>
+                    {% elif det.animal_type == 'tiger' %}<i class="bi bi-shield-exclamation"></i>
+                    {% elif det.animal_type == 'leopard' %}<i class="bi bi-eye-fill"></i>
+                    {% elif det.animal_type == 'bear' %}<i class="bi bi-asterisk"></i>
+                    {% else %}<i class="bi bi-binoculars-fill"></i>
+                    {% endif %}
+                </div>
+                <div class="activity-body">
+                    <div class="activity-title">{{ det.get_animal_type_display }} Detected</div>
+                    <div class="activity-meta">{{ det.location_name }} &bull; {{ det.timestamp|date:"M d, Y H:i" }}</div>
+                </div>
+                <div class="activity-badge severity-badge-{{ det.severity }}">{{ det.severity|upper }}</div>
+                <div class="activity-conf">{{ det.confidence|floatformat:0 }}%<!-- fix --></div>
+            </div>
+            {% empty %}
+            <div class="empty-state"><i class="bi bi-check-circle-fill me-2"></i>No detections yet. Upload an image to start.</div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <h2 class="section-title"><i class="bi bi-broadcast me-2"></i>Protected Animals</h2>
+        <div class="animal-grid">
+            {% for animal, label in animals %}
+            <div class="animal-card animal-{{ animal }}">
+                <div class="animal-icon-wrap">
+                    {% if animal == 'elephant' %}<i class="bi bi-exclamation-octagon-fill"></i>
+                    {% elif animal == 'tiger' %}<i class="bi bi-shield-exclamation"></i>
+                    {% elif animal == 'leopard' %}<i class="bi bi-eye-fill"></i>
+                    {% elif animal == 'bear' %}<i class="bi bi-asterisk"></i>
+                    {% else %}<i class="bi bi-binoculars-fill"></i>
+                    {% endif %}
+                </div>
+                <span>{{ label }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Counter animation
+document.querySelectorAll('.stat-card').forEach(card => {
+    const target = parseInt(card.dataset.count);
+    const el = card.querySelector('.counter');
+    animateCounter(el, target);
+});
+</script>
+{% endblock %}

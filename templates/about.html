@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block title %}About – EcoSentinel{% endblock %}
+{% block page_title %}<i class="bi bi-info-circle-fill me-2"></i>About EcoSentinel{% endblock %}
+{% block content %}
+
+<div class="about-hero">
+    <h1 class="about-title">Protecting Wildlife, Protecting People</h1>
+    <p class="about-desc">EcoSentinel is an AI-powered smart wildlife surveillance and alert network designed to detect wild animals encroaching near human settlements and instantly alert forest authorities to prevent human-wildlife conflict.</p>
+</div>
+
+<!-- Mission -->
+<div class="row g-4 mt-2">
+    <div class="col-md-4">
+        <div class="about-card">
+            <div class="about-icon" style="color:#ff4444;"><i class="bi bi-shield-exclamation"></i></div>
+            <h5>The Problem</h5>
+            <p>Human-wildlife conflict causes thousands of injuries, deaths, and crop losses every year in forest-border communities worldwide.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="about-card">
+            <div class="about-icon" style="color:#2ecc71;"><i class="bi bi-cpu-fill"></i></div>
+            <h5>Our Solution</h5>
+            <p>AI-powered camera surveillance that detects animals in real-time and immediately alerts forest officers via SMS and dashboard notifications.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="about-card">
+            <div class="about-icon" style="color:#3498db;"><i class="bi bi-globe-americas"></i></div>
+            <h5>The Impact</h5>
+            <p>Faster response times, reduced human casualties, improved wildlife conservation, and data-driven forest management decisions.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Technology Stack -->
+<h2 class="section-title mt-5"><i class="bi bi-stack me-2"></i>Technology Stack</h2>
+<div class="tech-grid">
+    <div class="tech-card">
+        <div class="tech-icon" style="color:#3776ab;"><i class="bi bi-filetype-py"></i></div>
+        <div class="tech-name">Python 3.14</div>
+        <div class="tech-desc">Backend language for AI processing and server logic</div>
+    </div>
+    <div class="tech-card">
+        <div class="tech-icon" style="color:#44b78b;"><i class="bi bi-grid-3x3-gap-fill"></i></div>
+        <div class="tech-name">Django 6.0</div>
+        <div class="tech-desc">MVC web framework with REST APIs and admin panel</div>
+    </div>
+    <div class="tech-card">
+        <div class="tech-icon" style="color:#ff6b35;"><i class="bi bi-cpu-fill"></i></div>
+        <div class="tech-name">YOLOv8 (Simulated)</div>
+        <div class="tech-desc">Real-time object detection model for wildlife species</div>
+    </div>
+    <div class="tech-card">
+        <div class="tech-icon" style="color:#00d2d3;"><i class="bi bi-camera-video-fill"></i></div>
+        <div class="tech-name">OpenCV</div>
+        <div class="tech-desc">Image processing, bounding box annotation, frame analysis</div>
+    </div>
+    <div class="tech-card">
+        <div class="tech-icon" style="color:#7952b3;"><i class="bi bi-bootstrap-fill"></i></div>
+        <div class="tech-name">Bootstrap 5</div>
+        <div class="tech-desc">Responsive UI framework with dark eco-green theme</div>
+    </div>
+    <div class="tech-card">
+        <div class="tech-icon" style="color:#2ecc71;"><i class="bi bi-map-fill"></i></div>
+        <div class="tech-name">Leaflet.js</div>
+        <div class="tech-desc">Interactive map with real-time GPS markers and popups</div>
+    </div>
+    <div class="tech-card">
+        <div class="tech-icon" style="color:#ff6384;"><i class="bi bi-bar-chart-fill"></i></div>
+        <div class="tech-name">Chart.js</div>
+        <div class="tech-desc">Analytics charts for detection trends and species distribution</div>
+    </div>
+    <div class="tech-card">
+        <div class="tech-icon" style="color:#aaa;"><i class="bi bi-database-fill"></i></div>
+        <div class="tech-name">SQLite</div>
+        <div class="tech-desc">Embedded database for local demo — scalable to PostgreSQL</div>
+    </div>
+</div>
+
+<!-- System Workflow -->
+<h2 class="section-title mt-5"><i class="bi bi-arrow-right-circle-fill me-2"></i>System Workflow</h2>
+<div class="workflow-timeline">
+    <div class="timeline-item">
+        <div class="tl-num">1</div>
+        <div class="tl-body">
+            <h5>Camera Feed Monitoring</h5>
+            <p>Forest border cameras upload images/video. Users can also manually upload camera feeds through the Live Detection page.</p>
+        </div>
+    </div>
+    <div class="timeline-item">
+        <div class="tl-num">2</div>
+        <div class="tl-body">
+            <h5>AI Animal Detection</h5>
+            <p>OpenCV + YOLOv8 model analyzes frames and identifies wildlife species with bounding boxes and confidence scores.</p>
+        </div>
+    </div>
+    <div class="timeline-item">
+        <div class="tl-num">3</div>
+        <div class="tl-body">
+            <h5>GPS Location Capture</h5>
+            <p>Browser geolocation API or camera GPS data provides precise coordinates. Displayed on Leaflet.js interactive map.</p>
+        </div>
+    </div>
+    <div class="timeline-item">
+        <div class="tl-num">4</div>
+        <div class="tl-body">
+            <h5>Alert Generation</h5>
+            <p>Detection stored in SQLite database. Alert dashboard updated. SMS notification simulated via Twilio/Fast2SMS API.</p>
+        </div>
+    </div>
+    <div class="timeline-item">
+        <div class="tl-num">5</div>
+        <div class="tl-body">
+            <h5>Officer Response</h5>
+            <p>Forest officers receive alerts on their dashboard, view detection images, track locations on the map, and update action status.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Dataset Info -->
+<div class="eco-card mt-5">
+    <div class="card-header-eco"><i class="bi bi-collection-fill me-2"></i>Wildlife Dataset Sources</div>
+    <div class="row g-3 p-3">
+        <div class="col-md-4">
+            <div class="dataset-item">
+                <i class="bi bi-cloud-download-fill me-2" style="color:#2ecc71;"></i>
+                <strong>Kaggle Wildlife Dataset</strong><br>
+                <small class="text-muted">Labeled images of elephants, tigers, leopards</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dataset-item">
+                <i class="bi bi-images me-2" style="color:#3498db;"></i>
+                <strong>Open Images Dataset</strong><br>
+                <small class="text-muted">Google's open labeled wildlife image set</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dataset-item">
+                <i class="bi bi-pencil-fill me-2" style="color:#ffa500;"></i>
+                <strong>Custom Forest Dataset</strong><br>
+                <small class="text-muted">Manually labeled forest border images with Roboflow</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

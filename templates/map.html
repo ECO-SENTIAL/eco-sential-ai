@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% block title %}Map Monitor – EcoSentinel{% endblock %}
+{% block page_title %}<i class="bi bi-geo-alt-fill me-2"></i>Map Monitor{% endblock %}
+{% block content %}
+
+<div class="row g-3 mb-3">
+    <div class="col-md-8">
+        <div class="map-filter-bar">
+            <span class="filter-label">Filter:</span>
+            <button class="filter-btn active" data-filter="all">All Animals</button>
+            <button class="filter-btn" data-filter="elephant">Elephant</button>
+            <button class="filter-btn" data-filter="tiger">Tiger</button>
+            <button class="filter-btn" data-filter="leopard">Leopard</button>
+            <button class="filter-btn" data-filter="bear">Bear</button>
+            <button class="filter-btn" data-filter="wild_boar">Wild Boar</button>
+        </div>
+    </div>
+    <div class="col-md-4 d-flex gap-2 align-items-center">
+        <button class="filter-btn" id="toggle-cameras">
+            <i class="bi bi-camera-video-fill me-1"></i>Toggle Cameras
+        </button>
+        <button class="filter-btn" id="fit-bounds">
+            <i class="bi bi-fullscreen me-1"></i>Fit All
+        </button>
+    </div>
+</div>
+
+<!-- Map Legend row -->
+<div class="map-legend-bar">
+    <div class="legend-item"><span class="legend-dot" style="background:#ff4444;"></span>Elephant/Tiger (Critical)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#ffa500;"></span>Leopard/Bear (High)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#2ecc71;"></span>Wild Boar (Medium)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#3498db;"></span>Deer (Low)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#9b59b6;"></span>Camera</div>
+</div>
+
+<!-- Map -->
+<div id="eco-map" style="height: 500px; border-radius: 16px; border: 1px solid rgba(46,204,113,0.2);"></div>
+
+<!-- Recent Detections Table -->
+<div class="eco-card mt-4">
+    <div class="card-header-eco"><i class="bi bi-list-ul me-2"></i>Detected Locations</div>
+    <div class="table-responsive">
+        <table class="eco-table">
+            <thead>
+                <tr>
+                    <th>Animal</th>
+                    <th>Location</th>
+                    <th>GPS</th>
+                    <th>Severity</th>
+                    <th>Time</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="map-table-body">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const detectionsData = {{ detections_json|safe }};
+const camerasData = {{ cameras_json|safe }};
+
+// Init map centered on South India (Western Ghats)
+const map = L.map('eco-map').setView([11.5, 76.6], 9);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 18,
+}).addTo(map);
+
+// Custom marker colors
+const severityColors = {
+    critical: '#ff4444', high: '#ffa500',
+    medium: '#2ecc71', low: '#3498db', default: '#aaa'
+};
+
+function makeMarker(lat, lng, color, size=14) {
+    return L.divIcon({
+        className: '',
+        html: `<div style="
+            width:${size}px; height:${size}px;
+            background:${color}; border:2px solid #fff;
+            border-radius:50%; box-shadow:0 0 8px ${color}88;
+        "></div>`,
+        iconSize: [size, size],
+        iconAnchor: [size/2, size/2],
+    });
+}
+
+let currentMarkers = [];
+let cameraMarkers = [];
+let showCameras = true;
+
+function renderDetections(filter='all') {
+    currentMarkers.forEach(m => map.removeLayer(m));
+    currentMarkers = [];
+    const tbody = document.getElementById('map-table-body');
+    tbody.innerHTML = '';
+
+    detectionsData.filter(d => filter === 'all' || d.animal_type === filter).forEach(d => {
+        const color = severityColors[d.severity] || severityColors.default;
+        const marker = L.marker([d.lat, d.lng], { icon: makeMarker(d.lat, d.lng, color) }).addTo(map);
+        marker.bindPopup(`
+            <div style="font-family:Inter,sans-serif; min-width:180px;">
+                <strong style="color:${color}">${d.animal}</strong><br>
+                📍 ${d.location}<br>
+                🎯 Confidence: ${d.confidence}%<br>
+                ⚠️ Severity: ${d.severity.toUpperCase()}<br>
+                🕐 ${d.timestamp}<br>
+                📊 Status: ${d.status}
+            </div>
+        `);
+        currentMarkers.push(marker);
+
+        // Table row
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><span class="animal-pill animal-${d.animal_type}">${d.animal}</span></td>
+            <td>${d.location}</td>
+            <td class="gps-cell">${d.lat.toFixed(4)}, ${d.lng.toFixed(4)}</td>
+            <td><span class="sev-badge-${d.severity}">${d.severity.toUpperCase()}</span></td>
+            <td>${d.timestamp}</td>
+            <td><button class="btn-sm-eco" onclick="map.setView([${d.lat},${d.lng}],14);map.openPopup;">
+                <i class="bi bi-geo-alt-fill"></i>
+            </button></td>
+        `;
+        tr.querySelector('.btn-sm-eco').addEventListener('click', () => {
+            map.setView([d.lat, d.lng], 14);
+            marker.openPopup();
+        });
+        tbody.appendChild(tr);
+    });
+}
+
+function renderCameras() {
+    camerasData.forEach(c => {
+        const marker = L.marker([c.lat, c.lng], {
+            icon: L.divIcon({
+                className: '',
+                html: `<div style="background:#9b59b6;padding:4px;border-radius:6px;color:white;font-size:11px;border:1px solid #fff;">📷</div>`,
+                iconAnchor: [12, 12],
+            })
+        }).addTo(map);
+        marker.bindTooltip(`${c.name} – ${c.location}`, {permanent: false, direction: 'top'});
+        cameraMarkers.push(marker);
+    });
+}
+
+renderDetections();
+renderCameras();
+
+// Filters
+document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderDetections(btn.dataset.filter);
+    });
+});
+
+document.getElementById('toggle-cameras').addEventListener('click', () => {
+    showCameras = !showCameras;
+    cameraMarkers.forEach(m => showCameras ? map.addLayer(m) : map.removeLayer(m));
+});
+
+document.getElementById('fit-bounds').addEventListener('click', () => {
+    if (currentMarkers.length) {
+        const group = L.featureGroup(currentMarkers);
+        map.fitBounds(group.getBounds().pad(0.1));
+    }
+});
+</script>
+{% endblock %}

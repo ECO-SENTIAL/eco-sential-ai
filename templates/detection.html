@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% block title %}Live Detection – EcoSentinel{% endblock %}
+{% block page_title %}<i class="bi bi-camera-fill me-2"></i>Live Detection{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+    <!-- Upload Panel -->
+    <div class="col-lg-6">
+        <div class="eco-card">
+            <div class="card-header-eco">
+                <i class="bi bi-upload me-2"></i>Upload Image for Detection
+            </div>
+            <form method="post" enctype="multipart/form-data" id="detection-form">
+                {% csrf_token %}
+                <!-- Drop Zone -->
+                <div class="drop-zone" id="drop-zone">
+                    <input type="file" name="image" id="image-input" accept="image/*" class="drop-input" required>
+                    <div class="drop-content" id="drop-content">
+                        <i class="bi bi-cloud-upload-fill drop-icon"></i>
+                        <p class="drop-text">Drag & drop an image here</p>
+                        <p class="drop-sub">or click to select a file</p>
+                        <span class="drop-types">JPG, PNG, BMP supported</span>
+                    </div>
+                    <img id="preview-img" class="drop-preview" alt="Preview" style="display:none;">
+                </div>
+
+                <!-- GPS Capture -->
+                <div class="gps-panel mt-3">
+                    <div class="gps-label"><i class="bi bi-geo-alt-fill me-1"></i>GPS Location</div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <input type="text" name="latitude" id="lat-input" class="form-control eco-input" placeholder="Latitude" value="11.0168">
+                        </div>
+                        <div class="col-6">
+                            <input type="text" name="longitude" id="lng-input" class="form-control eco-input" placeholder="Longitude" value="76.9558">
+                        </div>
+                    </div>
+                    <button type="button" class="btn-gps mt-2" id="get-gps">
+                        <i class="bi bi-crosshair2 me-1"></i>Auto-Detect GPS
+                    </button>
+                    <input type="text" name="location_name" class="form-control eco-input mt-2" placeholder="Location Name (e.g. Forest Border Zone 3)" value="Forest Border Zone">
+                </div>
+
+                <button type="submit" class="btn-eco-primary w-100 mt-4" id="detect-btn">
+                    <i class="bi bi-cpu-fill me-2"></i>Run AI Detection
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Result Panel -->
+    <div class="col-lg-6">
+        {% if result %}
+        <div class="eco-card result-card">
+            <div class="card-header-eco result-header severity-{{ result.severity }}">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>Detection Result
+                <span class="sev-badge-{{ result.severity }} ms-auto">{{ result.severity|upper }}</span>
+            </div>
+
+            <!-- Annotated Image -->
+            {% if result.annotated_url %}
+            <div class="result-image-wrap">
+                <img src="{{ result.annotated_url }}" alt="Detection" class="result-img">
+                <div class="result-img-label">AI Annotated Output</div>
+            </div>
+            {% elif result.image_url %}
+            <div class="result-image-wrap">
+                <img src="{{ result.image_url }}" alt="Detection" class="result-img">
+            </div>
+            {% endif %}
+
+            <!-- Animal Info -->
+            <div class="result-animal animal-{{ result.animal_type }}">
+                <div class="result-animal-icon">
+                    {% if result.animal_type == 'elephant' %}<i class="bi bi-exclamation-octagon-fill"></i>
+                    {% elif result.animal_type == 'tiger' %}<i class="bi bi-shield-exclamation"></i>
+                    {% elif result.animal_type == 'leopard' %}<i class="bi bi-eye-fill"></i>
+                    {% elif result.animal_type == 'bear' %}<i class="bi bi-asterisk"></i>
+                    {% else %}<i class="bi bi-binoculars-fill"></i>{% endif %}
+                </div>
+                <div>
+                    <div class="result-animal-name">{{ result.animal }}</div>
+                    <div class="result-animal-sub">Wildlife Species Identified</div>
+                </div>
+            </div>
+
+            <!-- Confidence Bar -->
+            <div class="confidence-wrap mt-3">
+                <div class="conf-label">AI Confidence Score</div>
+                <div class="conf-bar">
+                    <div class="conf-fill" style="width: {{ result.confidence }}%">
+                        <span class="conf-text">{{ result.confidence }}%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details -->
+            <div class="result-details mt-3">
+                <div class="detail-row">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <span>{{ result.lat }}, {{ result.lng }}</span>
+                </div>
+                <div class="detail-row">
+                    <i class="bi bi-clock-fill"></i>
+                    <span>{{ result.timestamp }}</span>
+                </div>
+                <div class="detail-row">
+                    <i class="bi bi-bell-fill"></i>
+                    <span>Alert dispatched to forest officers</span>
+                </div>
+            </div>
+
+            <!-- Alert Message Preview -->
+            <div class="alert-preview mt-3">
+                <div class="alert-preview-label"><i class="bi bi-phone-fill me-1"></i>SMS Alert Sent:</div>
+                <div class="alert-preview-msg">
+                    "EcoSentinel Alert: {{ result.animal }} detected near Forest Border Zone at GPS ({{ result.lat }}, {{ result.lng }}). Immediate action required."
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="eco-card h-100 d-flex flex-column justify-content-center align-items-center" style="min-height: 400px;">
+            <div class="empty-detection">
+                <div class="empty-radar">
+                    <div class="radar-ring r1"></div>
+                    <div class="radar-ring r2"></div>
+                    <i class="bi bi-camera-fill" style="font-size:2.5rem; color: var(--eco-green);"></i>
+                </div>
+                <p class="mt-4 text-muted text-center">Upload an image from a forest camera to<br>run AI-powered wildlife detection.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Sample Animals Reference -->
+<div class="eco-card mt-4">
+    <div class="card-header-eco"><i class="bi bi-grid-fill me-2"></i>Detectable Wildlife Species</div>
+    <div class="species-grid">
+        <div class="species-card">
+            <div class="species-icon" style="color:#ff4444;"><i class="bi bi-exclamation-octagon-fill"></i></div>
+            <div class="species-name">Elephant</div>
+            <div class="species-sev critical">Critical</div>
+        </div>
+        <div class="species-card">
+            <div class="species-icon" style="color:#ff6b35;"><i class="bi bi-shield-exclamation"></i></div>
+            <div class="species-name">Tiger</div>
+            <div class="species-sev critical">Critical</div>
+        </div>
+        <div class="species-card">
+            <div class="species-icon" style="color:#ffa500;"><i class="bi bi-eye-fill"></i></div>
+            <div class="species-name">Leopard</div>
+            <div class="species-sev high">High</div>
+        </div>
+        <div class="species-card">
+            <div class="species-icon" style="color:#ff8c42;"><i class="bi bi-asterisk"></i></div>
+            <div class="species-name">Bear</div>
+            <div class="species-sev high">High</div>
+        </div>
+        <div class="species-card">
+            <div class="species-icon" style="color:#2ecc71;"><i class="bi bi-binoculars-fill"></i></div>
+            <div class="species-name">Wild Boar</div>
+            <div class="species-sev medium">Medium</div>
+        </div>
+        <div class="species-card">
+            <div class="species-icon" style="color:#3498db;"><i class="bi bi-binoculars-fill"></i></div>
+            <div class="species-name">Deer</div>
+            <div class="species-sev low">Low</div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// File drag & drop
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('image-input');
+const preview = document.getElementById('preview-img');
+const dropContent = document.getElementById('drop-content');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) {
+        fileInput.files = e.dataTransfer.files;
+        showPreview(e.dataTransfer.files[0]);
+    }
+});
+fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) showPreview(fileInput.files[0]);
+});
+
+function showPreview(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        dropContent.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+// GPS
+document.getElementById('get-gps').addEventListener('click', () => {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+            document.getElementById('lat-input').value = pos.coords.latitude.toFixed(5);
+            document.getElementById('lng-input').value = pos.coords.longitude.toFixed(5);
+        }, () => alert('Could not get location. Using demo coordinates.'));
+    }
+});
+
+// Form loading state
+document.getElementById('detection-form').addEventListener('submit', function() {
+    const btn = document.getElementById('detect-btn');
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analyzing...';
+    btn.disabled = true;
+});
+</script>
+{% endblock %}

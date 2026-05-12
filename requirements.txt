@@ -1,0 +1,5 @@
+Django==6.0.3
+Pillow==12.0.0
+opencv-python-headless==4.13.0.92
+asgiref==3.11.1
+sqlparse==0.5.5

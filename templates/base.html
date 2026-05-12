@@ -1,0 +1,122 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EcoSentinel – Smart Wildlife Surveillance{% endblock %}</title>
+    <meta name="description" content="EcoSentinel - AI-powered wildlife surveillance and alert network to prevent human-wildlife conflict.">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="eco-body">
+
+<!-- Sidebar -->
+<nav id="sidebar" class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon">
+            <i class="bi bi-shield-fill-check"></i>
+        </div>
+        <div class="brand-text">
+            <span class="brand-name">EcoSentinel</span>
+            <span class="brand-sub">Wildlife AI Network</span>
+        </div>
+    </div>
+
+    <div class="sidebar-nav">
+        <div class="nav-section-label">MAIN</div>
+        <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+            <i class="bi bi-house-fill"></i> <span>Home</span>
+        </a>
+        <a href="{% url 'detection' %}" class="nav-link {% if request.resolver_match.url_name == 'detection' %}active{% endif %}">
+            <i class="bi bi-camera-fill"></i> <span>Live Detection</span>
+        </a>
+        <a href="{% url 'map' %}" class="nav-link {% if request.resolver_match.url_name == 'map' %}active{% endif %}">
+            <i class="bi bi-geo-alt-fill"></i> <span>Map Monitor</span>
+        </a>
+
+        <div class="nav-section-label">ALERTS</div>
+        {% if user.is_authenticated %}
+        <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+            <span class="nav-badge" id="alert-badge">!</span>
+        </a>
+        {% else %}
+        <a href="{% url 'login' %}" class="nav-link">
+            <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+        </a>
+        {% endif %}
+        <a href="{% url 'history' %}" class="nav-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}">
+            <i class="bi bi-clock-history"></i> <span>Alert History</span>
+        </a>
+
+        <div class="nav-section-label">SYSTEM</div>
+        <a href="{% url 'about' %}" class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}">
+            <i class="bi bi-info-circle-fill"></i> <span>About</span>
+        </a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'logout' %}" class="nav-link">
+            <i class="bi bi-box-arrow-right"></i> <span>Logout</span>
+        </a>
+        {% else %}
+        <a href="{% url 'login' %}" class="nav-link {% if request.resolver_match.url_name == 'login' %}active{% endif %}">
+            <i class="bi bi-person-lock"></i> <span>Officer Login</span>
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="system-status">
+            <span class="status-dot"></span>
+            <span>AI System Online</span>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<div class="main-content" id="main-content">
+    <!-- Top Bar -->
+    <div class="topbar">
+        <button class="sidebar-toggle" id="sidebar-toggle">
+            <i class="bi bi-list"></i>
+        </button>
+        <div class="topbar-title">{% block page_title %}EcoSentinel{% endblock %}</div>
+        <div class="topbar-actions">
+            <div class="alert-bell" id="alert-bell">
+                <i class="bi bi-bell-fill"></i>
+                <span class="bell-dot" id="bell-dot"></span>
+            </div>
+            {% if user.is_authenticated %}
+            <div class="user-pill">
+                <i class="bi bi-person-circle"></i>
+                <span>{{ user.get_full_name|default:user.username }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Alert Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Page Content -->
+    <div class="page-content">
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

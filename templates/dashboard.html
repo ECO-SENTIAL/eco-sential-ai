@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Alert Dashboard – EcoSentinel{% endblock %}
+{% block page_title %}<i class="bi bi-speedometer2 me-2"></i>Alert Dashboard{% endblock %}
+{% block content %}
+
+<!-- Stats Row -->
+<div class="stats-row mb-4">
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(255,80,80,0.15);color:#ff5050;"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="stat-value">{{ total_today }}</div>
+        <div class="stat-label">Today's Detections</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(255,60,60,0.15);color:#ff3c3c;"><i class="bi bi-shield-exclamation"></i></div>
+        <div class="stat-value">{{ critical_alerts }}</div>
+        <div class="stat-label">Critical Alerts</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(255,165,0,0.15);color:#ffa500;"><i class="bi bi-hourglass-split"></i></div>
+        <div class="stat-value">{{ pending_action }}</div>
+        <div class="stat-label">Pending Action</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(46,204,113,0.15);color:#2ecc71;"><i class="bi bi-check-circle-fill"></i></div>
+        <div class="stat-value">{{ total_all }}</div>
+        <div class="stat-label">Total Detections</div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Charts Column -->
+    <div class="col-lg-8">
+        <!-- Line Chart -->
+        <div class="eco-card mb-4">
+            <div class="card-header-eco"><i class="bi bi-bar-chart-fill me-2"></i>Detections – Last 7 Days</div>
+            <canvas id="lineChart" height="120"></canvas>
+        </div>
+
+        <!-- Recent Alerts Table -->
+        <div class="eco-card">
+            <div class="card-header-eco d-flex align-items-center">
+                <i class="bi bi-bell-fill me-2"></i>Recent Alerts
+                <a href="/history/" class="ms-auto btn-sm-eco">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="eco-table">
+                    <thead>
+                        <tr>
+                            <th>Animal</th>
+                            <th>Location</th>
+                            <th>Severity</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for det in recent_alerts %}
+                    <tr id="row-{{ det.id }}">
+                        <td><span class="animal-pill animal-{{ det.animal_type }}">{{ det.get_animal_type_display }}</span></td>
+                        <td>{{ det.location_name }}</td>
+                        <td><span class="sev-badge-{{ det.severity }}">{{ det.severity|upper }}</span></td>
+                        <td>{{ det.timestamp|date:"M d H:i" }}</td>
+                        <td>
+                            <select class="status-select" onchange="updateStatus({{ det.id }}, this.value)">
+                                <option value="detected" {% if det.status == 'detected' %}selected{% endif %}>Detected</option>
+                                <option value="verified" {% if det.status == 'verified' %}selected{% endif %}>Verified</option>
+                                <option value="action_taken" {% if det.status == 'action_taken' %}selected{% endif %}>Action Taken</option>
+                                <option value="false_alarm" {% if det.status == 'false_alarm' %}selected{% endif %}>False Alarm</option>
+                            </select>
+                        </td>
+                        <td>
+                            <a href="/map/" class="btn-sm-eco"><i class="bi bi-geo-alt-fill"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">No alerts yet</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-lg-4">
+        <!-- Donut Chart -->
+        <div class="eco-card mb-4">
+            <div class="card-header-eco"><i class="bi bi-pie-chart-fill me-2"></i>By Animal Type</div>
+            <canvas id="donutChart" height="220"></canvas>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="eco-card">
+            <div class="card-header-eco"><i class="bi bi-lightning-fill me-2"></i>Quick Actions</div>
+            <div class="quick-actions">
+                <a href="/detection/" class="quick-btn">
+                    <i class="bi bi-camera-fill"></i>
+                    <span>New Detection</span>
+                </a>
+                <a href="/map/" class="quick-btn">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <span>View Map</span>
+                </a>
+                <a href="/history/" class="quick-btn">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Full History</span>
+                </a>
+                <a href="/admin/" class="quick-btn">
+                    <i class="bi bi-gear-fill"></i>
+                    <span>Admin Panel</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Line Chart
+const lineCtx = document.getElementById('lineChart').getContext('2d');
+new Chart(lineCtx, {
+    type: 'line',
+    data: {
+        labels: {{ chart_labels|safe }},
+        datasets: [{
+            label: 'Detections',
+            data: {{ chart_counts|safe }},
+            borderColor: '#2ecc71',
+            backgroundColor: 'rgba(46,204,113,0.15)',
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#2ecc71',
+            pointRadius: 5,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { labels: { color: '#aaa' } } },
+        scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#aaa' } },
+            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#aaa', stepSize: 1 } }
+        }
+    }
+});
+
+// Donut Chart
+const animalColors = ['#ff4444','#ff6b35','#ffa500','#ff8c42','#2ecc71','#3498db','#9b59b6'];
+const donutCtx = document.getElementById('donutChart').getContext('2d');
+new Chart(donutCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ animal_labels|safe }},
+        datasets: [{
+            data: {{ animal_counts|safe }},
+            backgroundColor: animalColors,
+            borderWidth: 2,
+            borderColor: '#1a2332',
+        }]
+    },
+    options: {
+        responsive: true,
+        cutout: '65%',
+        plugins: {
+            legend: { labels: { color: '#aaa', padding: 10, font: {size: 12} } }
+        }
+    }
+});
+
+// Update detection status
+function updateStatus(id, status) {
+    fetch(`/api/detections/${id}/status/`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+        body: JSON.stringify({status})
+    }).then(r => r.json()).then(data => {
+        if (data.success) showToast('Status Updated', `Detection #${id} marked as ${status}`, 'success');
+    });
+}
+
+function getCookie(name) {
+    let c = document.cookie.split(';').find(c => c.trim().startsWith(name+'='));
+    return c ? decodeURIComponent(c.split('=')[1]) : '';
+}
+</script>
+{% endblock %}

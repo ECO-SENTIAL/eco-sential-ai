@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Alert History – EcoSentinel{% endblock %}
+{% block page_title %}<i class="bi bi-clock-history me-2"></i>Alert History{% endblock %}
+{% block content %}
+
+<!-- Filters -->
+<div class="eco-card mb-4">
+    <div class="card-header-eco"><i class="bi bi-funnel-fill me-2"></i>Filter Detections</div>
+    <form method="get" class="filter-form">
+        <div class="row g-3">
+            <div class="col-md-2">
+                <label class="filter-lbl">Animal</label>
+                <select name="animal" class="form-select eco-select">
+                    <option value="">All</option>
+                    {% for val, label in animal_choices %}
+                    <option value="{{ val }}" {% if filters.animal == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="filter-lbl">Severity</label>
+                <select name="severity" class="form-select eco-select">
+                    <option value="">All</option>
+                    {% for val, label in severity_choices %}
+                    <option value="{{ val }}" {% if filters.severity == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="filter-lbl">Status</label>
+                <select name="status" class="form-select eco-select">
+                    <option value="">All</option>
+                    {% for val, label in status_choices %}
+                    <option value="{{ val }}" {% if filters.status == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="filter-lbl">From Date</label>
+                <input type="date" name="date_from" class="form-control eco-input" value="{{ filters.date_from }}">
+            </div>
+            <div class="col-md-2">
+                <label class="filter-lbl">To Date</label>
+                <input type="date" name="date_to" class="form-control eco-input" value="{{ filters.date_to }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2">
+                <button type="submit" class="btn-eco-primary flex-grow-1">
+                    <i class="bi bi-search me-1"></i>Filter
+                </button>
+                <a href="/history/" class="btn-eco-secondary">Reset</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Results -->
+<div class="eco-card">
+    <div class="card-header-eco d-flex align-items-center">
+        <i class="bi bi-table me-2"></i>Detection Log
+        <span class="ms-2 badge-count">{{ detections|length }} records</span>
+        <button class="ms-auto btn-sm-eco" id="export-csv">
+            <i class="bi bi-download me-1"></i>Export CSV
+        </button>
+    </div>
+    <div class="table-responsive">
+        <table class="eco-table" id="history-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Animal</th>
+                    <th>Location</th>
+                    <th>GPS</th>
+                    <th>Confidence</th>
+                    <th>Severity</th>
+                    <th>Status</th>
+                    <th>Camera</th>
+                    <th>Date/Time</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for det in detections %}
+            <tr>
+                <td class="text-muted">{{ det.id }}</td>
+                <td><span class="animal-pill animal-{{ det.animal_type }}">{{ det.get_animal_type_display }}</span></td>
+                <td>{{ det.location_name }}</td>
+                <td class="gps-cell">{{ det.gps_lat|floatformat:4 }}, {{ det.gps_lng|floatformat:4 }}</td>
+                <td>
+                    <div class="mini-conf">
+                        <div class="mini-conf-bar" style="width:{{ det.confidence|floatformat:0 }}%"></div>
+                    </div>
+                    <span class="conf-val">{{ det.confidence|floatformat:0 }}%</span>
+                </td>
+                <td><span class="sev-badge-{{ det.severity }}">{{ det.severity|upper }}</span></td>
+                <td><span class="status-pill status-{{ det.status }}">{{ det.get_status_display }}</span></td>
+                <td>{{ det.camera.name|default:"—" }}</td>
+                <td>{{ det.timestamp|date:"Y-m-d H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9" class="text-center py-5 text-muted">No records match your filter.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// CSV Export
+document.getElementById('export-csv').addEventListener('click', () => {
+    const table = document.getElementById('history-table');
+    let csv = [];
+    table.querySelectorAll('tr').forEach(row => {
+        const cols = [...row.querySelectorAll('th,td')].map(c => `"${c.innerText.trim().replace(/"/g,'""')}"`);
+        csv.push(cols.join(','));
+    });
+    const blob = new Blob([csv.join('\n')], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'ecosentinel_history.csv';
+    a.click();
+});
+</script>
+{% endblock %}
